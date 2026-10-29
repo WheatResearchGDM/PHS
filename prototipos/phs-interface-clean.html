@@ -1,0 +1,160 @@
+<div id="phs-preview" class="viz-dotted-background">
+<style>
+#phs-preview{padding:20px 8px;display:flex;justify-content:center;font-family:Arial,sans-serif;color-scheme:light dark}
+#phs-preview *{box-sizing:border-box}
+#phs-preview .phone{--paper:light-dark(#ffffff,#18221d);--ink:light-dark(#172d22,#e6f0e9);--sub:light-dark(#617269,#a5b7ab);--line:light-dark(#dce5df,#3a4a40);--soft:light-dark(#f0f5f1,#25362b);--brand:light-dark(#176b43,#a0ddb7);--onbrand:light-dark(#ffffff,#123621);position:relative;width:390px;max-width:100%;background:var(--paper);color:var(--ink);border:6px solid light-dark(#25372c,#485b50);border-radius:30px;overflow:hidden;font-size:14px;line-height:1.3}
+#phs-preview button,#phs-preview input,#phs-preview textarea,#phs-preview select{font:inherit;color:inherit}
+#phs-preview button{border:1px solid var(--line);border-radius:10px;background:var(--paper);min-height:44px;padding:8px 10px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+#phs-preview button:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+#phs-preview .status{display:flex;justify-content:space-between;padding:10px 17px 0;font-size:11px}
+#phs-preview .top{display:flex;align-items:center;justify-content:space-between;padding:9px 14px 6px}
+#phs-preview .logo{display:flex;align-items:center;gap:8px;font-weight:500;font-size:21px;letter-spacing:-.5px}
+#phs-preview .logo i{color:var(--brand)}
+#phs-preview .top button{border:0;width:44px;padding:0}
+#phs-preview .content{padding:0 12px 10px}
+#phs-preview .tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+#phs-preview .tools button{font-size:12px;background:var(--soft)}
+#phs-preview .scan{background:var(--soft);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;gap:8px;margin-bottom:8px;min-height:69px}
+#phs-preview .scan-text{display:flex;align-items:center;gap:9px;font-size:12px}
+#phs-preview .scan-text>svg{width:35px;height:35px;color:var(--brand)}
+#phs-preview .scan small{display:block;color:var(--sub);margin-top:3px;font-size:11px}
+#phs-preview .scan-actions{display:flex;gap:5px}
+#phs-preview .scan-actions button{padding:8px;min-width:44px}
+#phs-preview .identity{border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:10px}
+#phs-preview .id-row{display:flex;justify-content:space-between;color:var(--sub);font-size:11px}
+#phs-preview .variety{font-size:17px;font-weight:500;margin:3px 0 7px;overflow-wrap:anywhere}
+#phs-preview .meta{display:grid;grid-template-columns:1.1fr .75fr 1fr;gap:5px;font-size:11px;color:var(--sub)}
+#phs-preview .meta b{display:block;font-size:14px;color:var(--ink);font-weight:500}
+#phs-preview .section-label{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:500}
+#phs-preview .section-label span{font-size:11px;color:var(--sub);font-weight:400}
+#phs-preview .scores{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+#phs-preview .score{display:flex;flex-direction:column;gap:4px;text-align:center;font-size:12px}
+#phs-preview .score button{height:48px;font-size:22px;padding:4px}
+#phs-preview .score button.active{border:2px solid var(--brand);background:var(--soft)}
+#phs-preview .totals{display:flex;justify-content:space-between;padding:7px 1px;font-size:12px;color:var(--sub)}
+#phs-preview .totals b{font-weight:500;color:var(--ink)}
+#phs-preview .obs{display:block;font-size:12px;margin:1px 0 7px}
+#phs-preview textarea{display:block;width:100%;height:42px;resize:none;margin-top:4px;border:1px solid var(--line);border-radius:9px;padding:10px;background:var(--paper);font-size:14px}
+#phs-preview .keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:6px}
+#phs-preview .keypad button{height:40px;min-height:40px;font-size:20px;background:var(--soft);padding:3px}
+#phs-preview .keypad button:last-child{color:var(--brand)}
+#phs-preview .actions{display:grid;grid-template-columns:1fr 1.9fr;gap:7px;margin-top:9px}
+#phs-preview .primary{background:var(--brand);border-color:var(--brand);color:var(--onbrand)}
+#phs-preview .foot{border-top:1px solid var(--line);padding:9px 14px;display:flex;justify-content:space-between;font-size:11px;background:var(--soft)}
+#phs-preview .foot b{font-weight:500}
+#phs-preview .notice{font-size:11px;color:var(--brand);min-height:17px;padding:5px 0 0}
+#phs-preview .overlay{position:absolute;inset:0;background:light-dark(#172d2255,#00000088);display:flex;align-items:flex-end;z-index:3}
+#phs-preview .overlay[hidden]{display:none}
+#phs-preview .sheet{background:var(--paper);width:100%;border-radius:20px 20px 0 0;padding:18px 16px 24px;box-shadow:0 -4px 24px #0002}
+#phs-preview .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:18px;font-weight:500}
+#phs-preview .sheet-head button{border:0;padding:5px;min-width:44px}
+#phs-preview .sheet label{display:block;margin-bottom:10px;font-size:12px}
+#phs-preview .sheet input,#phs-preview .sheet select{display:block;width:100%;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:5px;background:var(--paper)}
+#phs-preview .sheet p{font-size:12px;color:var(--sub);margin:10px 0}
+#phs-preview .sheet .full{width:100%;margin-top:8px}
+#phs-preview .sheet .danger{color:light-dark(#ad3028,#ffa69c)}
+#phs-preview .filename{padding:12px;background:var(--soft);border-radius:9px;overflow-wrap:anywhere;font-size:12px}
+#phs-preview .sheet .menuitem{justify-content:flex-start;width:100%;margin-bottom:7px}
+@media(max-width:360px){#phs-preview{padding:8px 0}#phs-preview .phone{border-width:3px}#phs-preview .content{padding-left:9px;padding-right:9px}#phs-preview .meta{font-size:11px}#phs-preview .tools button{padding:6px 4px}}
+#phs-preview .phone{border-width:4px;border-radius:26px}
+#phs-preview .header-actions{display:flex;gap:1px}
+#phs-preview .top{padding:7px 12px 3px}
+#phs-preview .collector{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:0 1px 9px}
+#phs-preview .capture-row{display:flex;align-items:center;justify-content:center;gap:15px;margin-bottom:9px}
+#phs-preview .camera{width:174px;aspect-ratio:1;position:relative;flex:none;border-radius:14px;overflow:hidden;background:linear-gradient(125deg,#5e7451 0%,#a5ad80 34%,#3c593d 60%,#84936a 100%);color:#fff;display:flex;align-items:center;justify-content:center}
+#phs-preview .camera-tag{position:absolute;top:9px;left:9px;right:9px;display:flex;gap:5px;align-items:center;font-size:11px;text-shadow:0 1px 4px #000}
+#phs-preview .camera-tag svg{width:13px;height:13px}
+#phs-preview .target{width:93px;height:93px;border:2px solid #e1ffcf;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#f6f6ec;box-shadow:0 0 0 5px #20302133}
+#phs-preview .target svg{width:73px;height:73px;color:#243127}
+#phs-preview .camera-status{position:absolute;bottom:0;left:0;right:0;text-align:center;padding:7px 2px;font-size:11px;background:#122a20d9}
+#phs-preview .camera-tools{display:flex;flex-direction:column;gap:3px;width:72px}
+#phs-preview .camera-tools button{min-height:49px;flex-direction:column;gap:1px;border:0;font-size:11px;color:var(--sub);padding:4px 1px}
+#phs-preview .camera-tools svg{width:19px;height:19px;color:var(--ink)}
+#phs-preview .identity{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0 1px 10px;margin-bottom:9px}
+#phs-preview .variety{font-size:16px;margin:0 0 4px}
+#phs-preview .compact-meta{display:flex;flex-wrap:wrap;gap:3px 12px;color:var(--sub);font-size:11px}
+#phs-preview .compact-meta b{font-weight:500;color:var(--ink)}
+#phs-preview .compact-meta>span:last-child{margin-left:auto}
+#phs-preview .score button{height:44px;font-size:21px;border-radius:8px}
+#phs-preview .obs-trigger{width:100%;justify-content:space-between;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;margin:0 0 7px;padding:7px 1px;font-size:12px;min-height:39px}
+#phs-preview .obs-trigger>span:first-child{display:flex;align-items:center;gap:6px}
+#phs-preview .obs-trigger svg{width:15px;height:15px}
+#phs-preview #phs-obs-summary{color:var(--sub);max-width:50%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;padding-right:5px}
+#phs-preview textarea[hidden]{display:none}
+#phs-preview .suggestions{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0 15px}
+#phs-preview .suggestions button{font-size:12px;border-radius:20px;background:var(--soft);padding:6px 10px}
+#phs-preview .suggestions button[aria-pressed="true"]{background:var(--brand);color:var(--onbrand);border-color:var(--brand)}
+#phs-preview .sheet textarea{min-height:85px;height:auto;font-size:16px}
+#phs-preview .sheet input,#phs-preview .sheet select{font-size:16px}
+#phs-preview .keypad button{background:var(--paper);height:40px;border-color:var(--line)}
+#phs-preview .keypad button:last-child{background:var(--soft)}
+#phs-preview .actions{margin-top:8px}
+#phs-preview .notice{font-size:11px}
+</style>
+<div class="phone" aria-label="Esboço interativo do aplicativo PHS">
+ <div class="status"><span>09:41</span><span>Android · ▰ 92%</span></div>
+ <header class="top"><div class="logo"><i data-lucide="sprout" aria-hidden="true"></i>PHS</div><nav class="header-actions" aria-label="Opções do aplicativo"><button data-open="user" aria-label="Escolher ou editar usuário" data-tooltip="Usuários"><i data-lucide="user-round" aria-hidden="true"></i></button><button data-open="settings" aria-label="Configurações" data-tooltip="Configurações"><i data-lucide="settings-2" aria-hidden="true"></i></button><button data-open="export" aria-label="Exportar lote por data" data-tooltip="Exportar lote"><i data-lucide="file-output" aria-hidden="true"></i></button></nav></header>
+ <div class="content">
+  <div class="collector"><span id="phs-user-label">Selecionar usuário</span><span>29/10/2026</span></div>
+  <div class="capture-row"><div class="camera" aria-label="Prévia simulada de câmera com leitura central"><div class="camera-tag"><i data-lucide="camera" aria-hidden="true"></i>Prévia simulada</div><div class="target"><i data-lucide="qr-code" aria-hidden="true"></i></div><div class="camera-status">FEID <span id="phs-feid">628244</span> · identificado</div></div><div class="camera-tools"><button data-open="dates" aria-label="Informar colheita e montagem"><i data-lucide="calendar-days" aria-hidden="true"></i><span id="phs-dates-label">Datas</span></button><button data-open="search" aria-label="Buscar pelo número da parcela"><i data-lucide="search" aria-hidden="true"></i><span>Parcela</span></button><button id="phs-scan" aria-label="Simular próxima leitura"><i data-lucide="scan-line" aria-hidden="true"></i><span>Reler</span></button></div></div>
+  <div class="identity"><div class="variety" id="phs-variety">BIOTRIGO_VELOZ</div><div class="compact-meta"><span>Parcela <b id="phs-parcel">53701</b></span><span>Repetição <b id="phs-rep">1</b></span><span id="phs-trial">PRYT_EXTRA · IJUÍ</span></div><span id="phs-device-label" hidden>CAMPO01</span></div>
+  <div class="section-label">Número de espigas<span id="phs-active-label">Digitando em R</span></div>
+  <div class="scores">
+   <div class="score"><span>R</span><button data-score="0" class="active" aria-label="Contagem R"></button></div><div class="score"><span>MR</span><button data-score="1" aria-label="Contagem MR"></button></div><div class="score"><span>MS</span><button data-score="2" aria-label="Contagem MS"></button></div><div class="score"><span>S</span><button data-score="3" aria-label="Contagem S"></button></div><div class="score"><span>AS</span><button data-score="4" aria-label="Contagem AS"></button></div>
+  </div>
+  <div class="totals"><span>Total de espigas <b id="phs-total">0</b></span><span>Média <b id="phs-mean">—</b></span></div>
+  <button class="obs-trigger" data-open="observations"><span><i data-lucide="message-square" aria-hidden="true"></i>Observações</span><span id="phs-obs-summary">Adicionar</span><i data-lucide="chevron-right" aria-hidden="true"></i></button><textarea id="phs-obs" hidden aria-label="Observação selecionada"></textarea>
+  <div class="keypad" aria-label="Teclado de contagens"><button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button><button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button><button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button><button data-key="back" aria-label="Apagar dígito"><i data-lucide="delete" aria-hidden="true"></i></button><button data-key="0">0</button><button data-key="next" aria-label="Próxima categoria"><i data-lucide="arrow-right" aria-hidden="true"></i></button></div>
+  <div class="actions"><button id="phs-clear"><i data-lucide="rotate-ccw" aria-hidden="true"></i>Limpar</button><button id="phs-save" class="primary"><i data-lucide="check" aria-hidden="true"></i>Salvar registro</button></div>
+  <div class="notice" id="phs-notice" aria-live="polite">Esboço interativo · coleta de exemplo</div>
+ </div>
+ <footer class="foot"><b id="phs-counter">Salvos hoje: 0</b><span>Banco local · CAMPO01</span></footer>
+ <div class="overlay" id="phs-overlay" hidden><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="phs-sheet-title"><div class="sheet-head"><span id="phs-sheet-title"></span><button id="phs-close" aria-label="Fechar"><i data-lucide="x" aria-hidden="true"></i></button></div><div id="phs-sheet-content"></div></section></div>
+</div>
+</div>
+<script>
+(()=>{
+const root=document.getElementById('phs-preview'),q=s=>root.querySelector(s),qa=s=>[...root.querySelectorAll(s)];
+let vals=['','','','',''],active=0,records={},history={'2026-10-28':12,'2026-10-27':8},user='',users=['Lucas','Maria'],device='CAMPO01',harvest='',assembly='',selected=0;
+const samples=[{feid:'628244',parcel:'53701',variety:'BIOTRIGO_VELOZ',rep:'1'},{feid:'628252',parcel:'53702',variety:'TBIO_CALIBRE',rep:'1'}],names=['R','MR','MS','S','AS'];
+const notice=t=>q('#phs-notice').textContent=t;
+const close=()=>{q('#phs-overlay').hidden=true};
+function render(){qa('[data-score]').forEach((el,i)=>{el.textContent=vals[i];el.classList.toggle('active',active===i);el.setAttribute('aria-pressed',String(active===i))});const n=vals.map(v=>Number(v)||0),total=n.reduce((a,b)=>a+b,0);q('#phs-total').textContent=total;q('#phs-mean').textContent=total?(n.reduce((a,b,i)=>a+b*(i*2+1),0)/total).toFixed(2).replace('.',','):'—';q('#phs-active-label').textContent='Digitando em '+names[active];q('#phs-counter').textContent='Salvos hoje: '+Object.keys(records).length;q('#phs-user-label').textContent=user||'Selecionar usuário';q('#phs-device-label').textContent=device;q('.foot span').textContent='Banco local · '+device;q('#phs-dates-label').textContent=harvest||assembly?'Datas ✓':'Datas';q('#phs-obs-summary').textContent=q('#phs-obs').value||'Adicionar'}
+function loadSample(i){selected=i;const s=samples[i];q('#phs-feid').textContent=s.feid;q('#phs-parcel').textContent=s.parcel;q('#phs-variety').textContent=s.variety;q('#phs-rep').textContent=s.rep;vals=['','','','','',''].slice(0,5);q('#phs-obs').value='';active=0;render();if(records[s.feid])open('duplicate');else notice('Amostra identificada · preencha as contagens')}
+function sheet(title,html){q('#phs-sheet-title').textContent=title;q('#phs-sheet-content').innerHTML=html;q('#phs-overlay').hidden=false;qa('button').forEach(b=>b.classList.add('cursor-interaction'));}
+function open(which){
+ if(which==='dates'){sheet('Datas da coleta','<label>Colheita<input id="phs-harvest" type="date"></label><label>Montagem<input id="phs-assembly" type="date"></label><p>Opcionais. Usadas nos próximos registros até serem alteradas. Leitura: data do momento da coleta.</p><button class="primary full" id="phs-dates-save">Aplicar datas</button>');q('#phs-harvest').value=harvest;q('#phs-assembly').value=assembly;q('#phs-dates-save').onclick=()=>{harvest=q('#phs-harvest').value;assembly=q('#phs-assembly').value;render();close();notice('Datas aplicadas às próximas avaliações')};}
+ if(which==='user'){
+  sheet('Usuários','<label>Coletor<select id="phs-user-select"></select></label><label>Nome<input id="phs-user-new" placeholder="Cadastrar ou editar nome"></label><div class="tools"><button id="phs-add-user">Cadastrar</button><button id="phs-edit-user">Renomear</button></div><button class="full danger" id="phs-delete-user">Excluir selecionado</button><button class="primary full" id="phs-user-apply">Usar este coletor</button>');
+  const sel=q('#phs-user-select'),fill=()=>{sel.replaceChildren();users.forEach(name=>{const o=document.createElement('option');o.textContent=name;o.value=name;sel.appendChild(o)});if(users.includes(user))sel.value=user};fill();
+  q('#phs-add-user').onclick=()=>{const name=q('#phs-user-new').value.trim();if(name&&!users.includes(name)){users.push(name);fill();sel.value=name;q('#phs-user-new').value=''}};
+  q('#phs-edit-user').onclick=()=>{const name=q('#phs-user-new').value.trim(),prev=sel.value;if(name&&prev&&(!users.includes(name)||name===prev)){users=users.map(n=>n===prev?name:n);if(user===prev)user=name;fill();sel.value=name;q('#phs-user-new').value='';render()}};
+  q('#phs-delete-user').onclick=()=>{const prev=sel.value;users=users.filter(n=>n!==prev);if(user===prev)user='';fill();render()};q('#phs-user-apply').onclick=()=>{user=sel.value;render();close()};
+ }
+ if(which==='observations'){
+  sheet('Observações','<div class="suggestions"><button data-suggestion="Germinado">Germinado</button><button data-suggestion="Doente">Doente</button><button data-suggestion="Verde">Verde</button></div><label>Texto livre<textarea id="phs-obs-edit" placeholder="Escreva uma observação…"></textarea></label><button class="primary full" id="phs-obs-apply">Aplicar observação</button>');
+  const field=q('#phs-obs-edit');field.value=q('#phs-obs').value;const sync=()=>qa('[data-suggestion]').forEach(b=>b.setAttribute('aria-pressed',String(field.value.split(';').map(v=>v.trim()).includes(b.dataset.suggestion))));sync();
+  qa('[data-suggestion]').forEach(b=>b.onclick=()=>{const parts=field.value.split(';').map(v=>v.trim()).filter(Boolean),word=b.dataset.suggestion;field.value=(parts.includes(word)?parts.filter(v=>v!==word):[...parts,word]).join('; ');sync()});field.oninput=sync;q('#phs-obs-apply').onclick=()=>{q('#phs-obs').value=field.value.trim();render();close()};
+ }
+ if(which==='settings'){
+  sheet('Configurações','<label>Arquivo de entrada<button class="full" id="phs-input-pick">ENTRADA_PHS.xlsx · escolher</button></label><label>Pasta de saída<button class="full" id="phs-folder-pick">OneDrive / PHS / Resultados</button></label><label>Nome do dispositivo<input id="phs-device-input"></label><button class="primary full" id="phs-settings-save">Salvar configurações</button><button class="full danger" id="phs-reset-link">Resetar aplicativo</button><p id="phs-settings-note">Seletores de arquivo e pasta demonstrativos.</p>');q('#phs-device-input').value=device;
+  q('#phs-input-pick').onclick=()=>q('#phs-settings-note').textContent='No aplicativo: selecionar o arquivo Excel de entrada.';q('#phs-folder-pick').onclick=()=>q('#phs-settings-note').textContent='No aplicativo: selecionar uma pasta do OneDrive.';q('#phs-settings-save').onclick=()=>{device=q('#phs-device-input').value.trim()||'CAMPO01';render();close()};q('#phs-reset-link').onclick=()=>open('reset');
+ }
+ if(which==='reset'){
+  sheet('Apagar todos os dados?','<p>As avaliações, os usuários, o catálogo e as configurações deste aparelho serão apagados. Arquivos exportados permanecem no OneDrive.</p><button class="full danger" id="phs-confirm-reset">Confirmar e apagar dados do exemplo</button><button class="full" id="phs-cancel-reset">Cancelar</button>');q('#phs-cancel-reset').onclick=close;q('#phs-confirm-reset').onclick=()=>{records={};history={};users=[];user='';device='CAMPO01';harvest='';assembly='';vals=['','','','',''];q('#phs-obs').value='';render();close();notice('Dados demonstrativos apagados')};
+ }
+ if(which==='search'){sheet('Buscar parcela','<label>Número da parcela<input id="phs-search-input" inputmode="numeric" placeholder="Ex.: 53701 ou 53702"></label><button class="primary full" id="phs-find">Buscar</button><p id="phs-search-feedback">Demonstração com as parcelas 53701 e 53702.</p>');q('#phs-find').onclick=()=>{const i=samples.findIndex(s=>s.parcel===q('#phs-search-input').value.trim());if(i<0)q('#phs-search-feedback').textContent='Parcela não encontrada.';else{close();loadSample(i)}};}
+ if(which==='duplicate'){sheet('FEID já anotado hoje','<p>Esta amostra já tem uma avaliação em 29/10/2026. Editar mantém um único registro e o mesmo contador.</p><button id="phs-edit" class="primary full">Editar avaliação existente</button><button id="phs-duplicate-cancel" class="full">Voltar sem editar</button>');q('#phs-edit').onclick=()=>{const r=records[samples[selected].feid];vals=[...r.vals];q('#phs-obs').value=r.obs;render();close();notice('Editando avaliação existente')};q('#phs-duplicate-cancel').onclick=close;}
+ if(which==='menu'){sheet('PHS · Menu','<button class="menuitem" id="phs-import">Importar Excel de entrada</button><button class="menuitem" id="phs-export">Exportar por dia</button><button class="menuitem" id="phs-folder">Pasta de saída · OneDrive</button><button class="menuitem danger" id="phs-reset">Resetar aplicativo</button>');q('#phs-export').onclick=()=>open('export');q('#phs-import').onclick=()=>{close();notice('Esboço: seleção do arquivo Excel no aplicativo')};q('#phs-folder').onclick=()=>{sheet('Pasta de saída','<p>Selecionar uma pasta dentro do OneDrive.</p><div class="filename">OneDrive / PHS / Resultados</div><button class="primary full" id="phs-folder-ok">Usar esta pasta · exemplo</button>');q('#phs-folder-ok').onclick=close};q('#phs-reset').onclick=()=>{sheet('Apagar todos os dados?','<p>Serão apagados as avaliações, o catálogo e as configurações deste aparelho. Arquivos já exportados permanecem no OneDrive.</p><button id="phs-reset-yes" class="full danger">Confirmar: apagar dados deste exemplo</button>');q('#phs-reset-yes').onclick=()=>{records={};vals=['','','','',''];user='';harvest='';assembly='';q('#phs-obs').value='';render();close();notice('Dados do exemplo apagados')}};}
+ if(which==='export'){
+  sheet('Exportar lote','<label>Datas disponíveis<select id="phs-export-date"></select></label><label>Formato<select id="phs-format"><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV (.csv)</option></select></label><p id="phs-export-count"></p><div class="filename" id="phs-export-name"></div><p>OneDrive / PHS / Resultados</p><button class="primary full" id="phs-export-demo">Exportar lote selecionado</button><p>Histórico demonstrativo. Nenhum arquivo será enviado.</p>');
+  const batches={...history};if(Object.keys(records).length)batches['2026-10-29']=Object.keys(records).length;const sel=q('#phs-export-date');Object.keys(batches).sort().reverse().forEach(date=>{const option=document.createElement('option');option.value=date;option.textContent=date.split('-').reverse().join('/')+' · '+batches[date]+' registros';sel.appendChild(option)});
+  const update=()=>{const date=sel.value;q('#phs-export-name').textContent=date?'RESULTADO_PHS_'+date.split('-').reverse().join('-')+'_'+device+'.'+q('#phs-format').value:'Nenhum lote disponível';q('#phs-export-count').textContent=date?batches[date]+' registros no lote':'Faça uma coleta para criar um lote.';q('#phs-export-demo').disabled=!date};q('#phs-format').onchange=update;sel.onchange=update;update();q('#phs-export-demo').onclick=()=>{close();notice('Prévia de exportação · nenhum arquivo foi enviado')};
+ }
+}
+qa('[data-open]').forEach(b=>b.onclick=()=>open(b.dataset.open));qa('[data-score]').forEach(b=>b.onclick=()=>{active=Number(b.dataset.score);render()});qa('[data-key]').forEach(b=>b.onclick=()=>{const k=b.dataset.key;if(k==='next')active=(active+1)%5;else if(k==='back')vals[active]=vals[active].slice(0,-1);else if(vals[active].length<4)vals[active]+=k;render()});q('#phs-close').onclick=close;q('#phs-clear').onclick=()=>{vals=['','','','',''];q('#phs-obs').value='';active=0;render();notice('Campos limpos')};q('#phs-scan').onclick=()=>loadSample((selected+1)%samples.length);
+function save(){const id=samples[selected].feid;records[id]={vals:[...vals],obs:q('#phs-obs').value,user,device,harvest,assembly};render();notice('Salvo no aparelho · FEID '+id);}
+q('#phs-save').onclick=()=>{if(!user){open('user');return;}if(vals.every(v=>!Number(v))){sheet('Salvar total zero?','<p>As cinco contagens estão vazias ou zeradas. O total será zero e a média ficará em branco.</p><button class="primary full" id="phs-zero-save">Salvar com zero</button>');q('#phs-zero-save').onclick=()=>{save();close()}}else save()};
+qa('button').forEach(b=>b.classList.add('cursor-interaction'));render();
+})();
+</script>

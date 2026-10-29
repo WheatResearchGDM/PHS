@@ -24,6 +24,8 @@ O sucesso da gravação significa que o arquivo foi entregue ao provedor Android
 
 ## Instalar
 
+[Baixar PHS Reader 0.1.0 no GitHub](https://github.com/WheatResearchGDM/PHS/releases/download/v0.1.0/PHS-Reader-0.1.0.apk). O APK está em **Releases**, disponível independentemente dos artefatos temporários de Actions.
+
 O instalador gerado em `dist/PHS-Reader-0.1.0.apk` é assinado com uma chave local de testes. Copie para o Android e abra o APK, autorizando a instalação por essa origem quando o sistema solicitar. Compatível com Android 8.0/API 26 ou superior, câmera traseira opcional. Conceda a permissão de câmera para ler QR Codes.
 
 Para manter atualizações locais compatíveis, preserve `.tools/debug.keystore`. Ela não é enviada ao GitHub. Os APKs produzidos pelo CI usam uma chave de testes temporária e não substituem uma instalação assinada com outra chave. A versão de produção deve adotar uma chave de distribuição estável e protegida.

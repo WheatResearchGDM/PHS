@@ -2,7 +2,6 @@ package br.com.phs.coleta;
 
 import static org.junit.Assert.*;
 
-import android.app.AlertDialog;
 import android.content.*;
 import android.view.*;
 import android.widget.*;
@@ -68,34 +67,24 @@ public class ExportUiTest {
     Method m = MainActivity.class.getDeclaredMethod("chooseExportDestination", boolean.class);
     m.setAccessible(true);
     m.invoke(activity, false);
-    AlertDialog dialog = ShadowAlertDialog.getLatestAlertDialog();
-    ListView list = dialog.getListView();
-    assertEquals(4, list.getAdapter().getCount());
-    assertTrue(list.getAdapter().getItem(0).toString().contains("conexão direta"));
-    assertEquals("Salvar como", list.getAdapter().getItem(3));
+    Intent intent = Shadows.shadowOf(activity).getNextStartedActivityForResult().intent;
+    assertEquals(Intent.ACTION_OPEN_DOCUMENT_TREE, intent.getAction());
+    assertTrue(intent.getBooleanExtra(Intent.EXTRA_LOCAL_ONLY, false));
   }
 
   @Test
-  public void directConnectionClearlyRequiresPublicRegistrationId() {
-    OneDriveExportFlow flow =
-        new OneDriveExportFlow(
-            activity,
-            activity.getSharedPreferences("settings", Context.MODE_PRIVATE),
-            new byte[] {1},
-            "test.xlsx",
-            false,
-            message -> {});
-    try {
-      flow.start();
-      String labels = text(ShadowAlertDialog.getLatestAlertDialog().getWindow().getDecorView());
-      assertTrue(labels.contains("ID público do aplicativo"));
-      assertTrue(labels.contains("Não informe senha nem segredo"));
-      assertFalse(
-          activity
-              .getSharedPreferences("settings", Context.MODE_PRIVATE)
-              .contains("graph_session"));
-    } finally {
-      flow.close();
-    }
+  public void cloudDestinationIsRejectedBeforeWriting() throws Exception {
+    Field data = MainActivity.class.getDeclaredField("pendingExport");
+    data.setAccessible(true);
+    data.set(activity, new byte[] {1});
+    Method m = MainActivity.class.getDeclaredMethod("writeExport", android.net.Uri.class);
+    m.setAccessible(true);
+    m.invoke(
+        activity,
+        android.net.Uri.parse("content://com.microsoft.skydrive.documents/document/file"));
+    Field busy = MainActivity.class.getDeclaredField("busy");
+    busy.setAccessible(true);
+    assertFalse(busy.getBoolean(activity));
+    assertArrayEquals(new byte[] {1}, (byte[]) data.get(activity));
   }
 }

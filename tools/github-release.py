@@ -8,6 +8,7 @@ import sys
 import urllib.error
 import urllib.request
 import urllib.parse
+import re
 
 class SafeRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, request, response, code, message, headers, newurl):
@@ -64,23 +65,24 @@ def diagnose():
                         print('\n'.join(lines[max(0, index-5):index+5]))
 
 def publish():
-    apk = ROOT / 'dist/PHS-Reader-0.1.0.apk'
+    version = sys.argv[2] if len(sys.argv) > 2 else re.search(r"versionName\s+'([^']+)'", (ROOT / 'app/build.gradle').read_text(encoding='utf-8')).group(1)
+    if not re.fullmatch(r'\d+\.\d+\.\d+', version):
+        raise SystemExit('Invalid version.')
+    apk = ROOT / ('dist/PHS-Reader-' + version + '.apk')
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
-    tag = 'v0.1.0'
+    tag = 'v' + version
     try:
         release = api('/releases/tags/' + tag)
     except urllib.error.HTTPError as error:
         if error.code != 404:
             raise
-        sha = subprocess.check_output(['git', 'rev-parse', '8424b22'], cwd=ROOT, text=True).strip()
+        sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+        notes_path = ROOT / 'docs/releases' / (version + '.md')
+        notes = notes_path.read_text(encoding='utf-8') if notes_path.exists() else 'Versão de testes para Android 8.0 ou superior.'
         release = api('/releases', 'POST', payload={
-            'tag_name': tag, 'target_commitish': sha, 'name': 'PHS Reader 0.1.0 — versão de testes',
+            'tag_name': tag, 'target_commitish': sha, 'name': 'PHS Reader ' + version + ' — versão de testes',
             'prerelease': True, 'draft': False,
-            'body': 'Primeira versão para testes em celulares e tablets Android 8.0 ou superior.\n\n'
-                'Baixe PHS-Reader-0.1.0.apk na seção Assets. APK assinado com a chave local de testes.\n\n'
-                '20 testes automatizados aprovados e Android Lint sem erros. Câmera e integração do provedor OneDrive ainda precisam de validação nos aparelhos de campo.\n\n'
-                'O OneDrive usa o seletor Android; quando o provedor não oferece acesso à pasta, utilize Salvar como.\n\n'
-                'SHA-256: `' + digest + '`'
+            'body': notes + '\n\nBaixe `' + apk.name + '` na seção Assets. APK assinado com a chave local de testes.\n\nSHA-256: `' + digest + '`'
         })
     existing = {a['name']: a for a in api('/releases/' + str(release['id']) + '/assets')}
     if apk.name in existing:

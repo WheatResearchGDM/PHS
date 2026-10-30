@@ -55,6 +55,7 @@ public class MainActivity extends ComponentActivity {
   private String observation = "", captureDay = "", editingDay = "";
   private boolean dirty = false, busy = false;
   private LinearLayout content;
+  private TextView destinationSummary;
   private ActivityResultLauncher<String[]> inputPicker;
   private ActivityResultLauncher<Uri> folderPicker;
   private ActivityResultLauncher<String> permission;
@@ -76,6 +77,8 @@ public class MainActivity extends ComponentActivity {
     super.onCreate(state);
     store = new Store(this);
     prefs = getSharedPreferences("settings", MODE_PRIVATE);
+    DailyDates.resetIfNewDay(prefs, day());
+    if (!prefs.contains("outputMode")) prefs.edit().putString("outputMode", "onedrive").apply();
     if (!prefs.contains("deviceId"))
       prefs
           .edit()
@@ -97,7 +100,12 @@ public class MainActivity extends ComponentActivity {
             uri -> {
               if (uri != null) {
                 persist(uri);
-                prefs.edit().putString("output", uri.toString()).apply();
+                prefs
+                    .edit()
+                    .putString("output", uri.toString())
+                    .putString("outputMode", "folder")
+                    .apply();
+                if (destinationSummary != null) destinationSummary.setText(destinationLabel());
                 message("Pasta de saída selecionada.");
               }
             });
@@ -391,6 +399,7 @@ public class MainActivity extends ComponentActivity {
 
   private void refresh() {
     if (footer == null) return;
+    DailyDates.resetIfNewDay(prefs, day());
     who.setText(
         prefs.getString("user", "").trim().isEmpty()
             ? "Selecionar usuário"
@@ -457,14 +466,19 @@ public class MainActivity extends ComponentActivity {
     }
     if (key.equals("→")) active = (active + 1) % 5;
     else if (key.equals("⌫")) {
+      if (values[active].isEmpty() && active > 0) active--;
       if (!values[active].isEmpty()) {
         values[active] = values[active].substring(0, values[active].length() - 1);
         dirty = true;
       }
-    } else if (values[active].length() < 2) {
-      values[active] += key;
-      dirty = true;
-    } else message("Máximo de 2 dígitos: 0 a 99 por categoria.");
+    } else {
+      EntryRules.Result result = EntryRules.digit(values[active], key);
+      if (result.accepted()) {
+        values[active] = result.value();
+        dirty = true;
+        if (result.advance()) active = Math.min(active + 1, 4);
+      } else message("Use de 0 a 15 espigas. Para registrar apenas 1, toque na seta.");
+    }
     refreshScores();
   }
 
@@ -482,9 +496,14 @@ public class MainActivity extends ComponentActivity {
           "Nova leitura?",
           "Há anotações sem salvar. Deseja descartá-las?",
           "Descartar",
-          this::armScan);
+          this::manualScan);
       return;
     }
+    manualScan();
+  }
+
+  private void manualScan() {
+    if (scanner != null) scanner.allowRepeatedCode();
     armScan();
   }
 
@@ -542,6 +561,7 @@ public class MainActivity extends ComponentActivity {
 
   private void save() {
     if (busy) return;
+    DailyDates.resetIfNewDay(prefs, day());
     if (current == null) {
       message("Selecione um genótipo antes de salvar.");
       return;
@@ -549,6 +569,10 @@ public class MainActivity extends ComponentActivity {
     if (prefs.getString("user", "").trim().isEmpty()) {
       usersDialog();
       message("Escolha o usuário antes de salvar.");
+      return;
+    }
+    if (!EntryRules.validNewCounts(counts())) {
+      message("Revise as contagens: a nova faixa permitida é de 0 a 15 por categoria.");
       return;
     }
     if (!captureDay.equals(day())) {
@@ -579,6 +603,11 @@ public class MainActivity extends ComponentActivity {
     Runnable write =
         () -> {
           try {
+            DailyDates.resetIfNewDay(prefs, day());
+            if (!captureDay.equals(day())) {
+              save();
+              return;
+            }
             Domain.Reading reading =
                 new Domain.Reading(
                     current,
@@ -592,10 +621,10 @@ public class MainActivity extends ComponentActivity {
                     prefs.getString("deviceId", ""),
                     prefs.getString("deviceName", ""));
             store.save(reading);
-            dirty = false;
-            editingDay = day();
-            refresh();
-            message("Salvo no aparelho · FEID " + current.feid());
+            String savedFeid = current.feid();
+            if (scanner != null) scanner.afterSave(savedFeid);
+            armScan();
+            message("Salvo · FEID " + savedFeid + ". Aponte para a próxima etiqueta.");
           } catch (Exception e) {
             error("Não foi possível salvar", e);
           }
@@ -835,25 +864,15 @@ public class MainActivity extends ComponentActivity {
             }),
         46);
     add(body, text("Catálogo local: " + store.catalogCount() + " genótipos", 12, MUTED), 26);
+    TextView target = text(destinationLabel(), 12, MUTED);
+    destinationSummary = target;
+    target.setMaxLines(2);
     add(
         body,
         button(
-            "Escolher pasta de saída · OneDrive",
-            () -> {
-              try {
-                folderPicker.launch(null);
-              } catch (Exception e) {
-                error("Seleção de pasta indisponível", e);
-              }
-            }),
+            "Destino da exportação",
+            () -> destinationDialog(() -> target.setText(destinationLabel()))),
         46);
-    TextView target =
-        text(
-            prefs.contains("output")
-                ? "Pasta selecionada"
-                : "Sem pasta: exportação usará Salvar como",
-            12,
-            MUTED);
     add(body, target, 29);
     EditText device = edit(prefs.getString("deviceName", Build.MODEL), false);
     dialogAdd(body, "Nome do dispositivo", device);
@@ -874,7 +893,7 @@ public class MainActivity extends ComponentActivity {
                       message("Coletas removidas. Cadastros preservados.");
                     })),
         46);
-    add(body, text("PHS Reader 0.1.0 · coleta offline", 12, MUTED), 28);
+    add(body, text("PHS Reader 0.2.0 · coleta offline", 12, MUTED), 28);
     ScrollView scroll = new ScrollView(this);
     scroll.addView(body);
     new AlertDialog.Builder(this)
@@ -894,7 +913,103 @@ public class MainActivity extends ComponentActivity {
         .show();
   }
 
+  private String destinationLabel() {
+    return switch (prefs.getString("outputMode", "onedrive")) {
+      case "folder" -> "Pasta no aparelho · selecionada";
+      case "saveAs" -> "Salvar como · escolher destino ao exportar";
+      default -> "OneDrive · escolher pasta ao exportar";
+    };
+  }
+
+  private void destinationDialog(Runnable changed) {
+    String[] options = {
+      "OneDrive · escolher pasta ao exportar", "Pasta no aparelho", "Salvar como a cada exportação"
+    };
+    new AlertDialog.Builder(this)
+        .setTitle("Destino da exportação")
+        .setItems(
+            options,
+            (d, index) -> {
+              if (index == 1) {
+                try {
+                  folderPicker.launch(
+                      prefs.contains("output") ? Uri.parse(prefs.getString("output", "")) : null);
+                } catch (Exception e) {
+                  error("Seleção de pasta indisponível", e);
+                }
+              } else {
+                prefs.edit().putString("outputMode", index == 0 ? "onedrive" : "saveAs").apply();
+                changed.run();
+                message(
+                    index == 0
+                        ? "Ao exportar, escolha a pasta na tela do OneDrive."
+                        : "O destino será escolhido ao exportar.");
+              }
+            })
+        .setNegativeButton("Cancelar", null)
+        .show();
+  }
+
+  private void sendToOneDrive(boolean csv) {
+    if (pendingExport == null) return;
+    if (getPackageManager().getLaunchIntentForPackage("com.microsoft.skydrive") == null) {
+      new AlertDialog.Builder(this)
+          .setTitle("OneDrive não instalado")
+          .setMessage(
+              "Instale e entre no OneDrive para escolher a pasta pelo aplicativo. Também é possível"
+                  + " usar Salvar como.")
+          .setPositiveButton("Salvar como", (d, w) -> saveAs(csv))
+          .setNegativeButton("Cancelar", null)
+          .show();
+      return;
+    }
+    busy = true;
+    byte[] bytes = pendingExport;
+    String name = pendingFile;
+    worker.execute(
+        () -> {
+          try {
+            File directory = new File(getCacheDir(), "exports/" + UUID.randomUUID());
+            if (!directory.isDirectory() && !directory.mkdirs())
+              throw new IOException("Não foi possível preparar o arquivo de exportação.");
+            File file = new File(directory, name);
+            try (OutputStream out = new FileOutputStream(file)) {
+              out.write(bytes);
+            }
+            runOnUiThread(
+                () -> {
+                  busy = false;
+                  try {
+                    Intent intent = ExportIntents.oneDrive(this, file, csv);
+                    startActivity(intent);
+                    pendingExport = null;
+                    message(
+                        "Escolha a pasta e confirme o envio no OneDrive. As coletas permanecem no"
+                            + " aparelho.");
+                  } catch (Exception e) {
+                    new AlertDialog.Builder(this)
+                        .setTitle("Não foi possível abrir o OneDrive")
+                        .setMessage(
+                            "Use Salvar como para escolher outro destino. As coletas estão"
+                                + " preservadas.")
+                        .setPositiveButton("Salvar como", (d, w) -> saveAs(csv))
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+                  }
+                });
+          } catch (Exception e) {
+            runOnUiThread(
+                () -> {
+                  busy = false;
+                  error("Falha ao preparar envio ao OneDrive", e);
+                });
+          }
+        });
+  }
+
   private void datesDialog() {
+    DailyDates.resetIfNewDay(prefs, day());
+    String openedDay = day();
     LinearLayout body = dialogBody();
     TextView h = dateField(body, "Colheita", "harvest"),
         a = dateField(body, "Montagem", "assembly");
@@ -912,8 +1027,15 @@ public class MainActivity extends ComponentActivity {
         .setPositiveButton(
             "Aplicar",
             (d, w) -> {
+              if (!openedDay.equals(day())) {
+                DailyDates.resetIfNewDay(prefs, day());
+                refresh();
+                message("O dia mudou. Informe novamente as datas para o novo dia.");
+                return;
+              }
               prefs
                   .edit()
+                  .putString("datesDay", day())
                   .putString("harvest", h.getTag().toString())
                   .putString("assembly", a.getTag().toString())
                   .apply();
@@ -1144,6 +1266,9 @@ public class MainActivity extends ComponentActivity {
             android.R.layout.simple_spinner_dropdown_item,
             new String[] {"Excel (.xlsx)", "CSV (.csv)"}));
     dialogAdd(body, "Formato", format);
+    TextView destination = text(destinationLabel(), 12, MUTED);
+    destination.setMaxLines(2);
+    add(body, destination, 34);
     TextView file = text("", 12, NAVY);
     file.setMaxLines(3);
     add(body, file, 52);
@@ -1198,6 +1323,15 @@ public class MainActivity extends ComponentActivity {
             runOnUiThread(
                 () -> {
                   busy = false;
+                  String mode = prefs.getString("outputMode", "onedrive");
+                  if (mode.equals("onedrive")) {
+                    sendToOneDrive(csv);
+                    return;
+                  }
+                  if (mode.equals("saveAs")) {
+                    saveAs(csv);
+                    return;
+                  }
                   String target = prefs.getString("output", "");
                   if (target.trim().isEmpty()) {
                     saveAs(csv);
@@ -1319,6 +1453,12 @@ public class MainActivity extends ComponentActivity {
     active = state.getInt("active");
     if (s != null) current = new Domain.Sample(s[0], s[1], s[2], s[3], s[4], s[5]);
     refresh();
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    if (prefs != null && footer != null) refresh();
   }
 
   @Override

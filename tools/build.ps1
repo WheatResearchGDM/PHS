@@ -15,7 +15,10 @@ if (-not (Test-Path -LiteralPath $testKey)) {
 & $gradle -p $projectRoot --no-daemon testDebugUnitTest lintDebug assembleDebug
 if ($LASTEXITCODE -ne 0) { throw 'A compilação ou as verificações falharam.' }
 New-Item -ItemType Directory -Force -Path (Join-Path $projectRoot 'dist') | Out-Null
-Copy-Item -LiteralPath (Join-Path $projectRoot 'app/build/outputs/apk/debug/app-debug.apk') -Destination (Join-Path $projectRoot 'dist/PHS-Reader-0.1.0.apk') -Force
-& (Join-Path $env:ANDROID_HOME 'build-tools/35.0.0/apksigner.bat') verify --verbose (Join-Path $projectRoot 'dist/PHS-Reader-0.1.0.apk')
+$metadata=Get-Content -LiteralPath (Join-Path $projectRoot 'app/build/outputs/apk/debug/output-metadata.json') -Raw | ConvertFrom-Json
+$version=$metadata.elements[0].versionName
+$apk=Join-Path $projectRoot "dist/PHS-Reader-$version.apk"
+Copy-Item -LiteralPath (Join-Path $projectRoot 'app/build/outputs/apk/debug/app-debug.apk') -Destination $apk -Force
+& (Join-Path $env:ANDROID_HOME 'build-tools/35.0.0/apksigner.bat') verify --verbose $apk
 if ($LASTEXITCODE -ne 0) { throw 'A assinatura do APK não passou na verificação.' }
-Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'dist/PHS-Reader-0.1.0.apk') | Format-List
+Get-FileHash -Algorithm SHA256 -LiteralPath $apk | Format-List

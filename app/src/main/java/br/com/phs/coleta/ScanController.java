@@ -11,6 +11,8 @@ import com.google.mlkit.vision.barcode.*;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 /** Reads only the central square visible in the preview; neighboring tags are discarded. */
@@ -30,6 +32,7 @@ final class ScanController {
           new BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build());
   private volatile boolean enabled = true, busy = false;
   private ProcessCameraProvider provider;
+  private final ScanGate gate = new ScanGate();
 
   ScanController(PreviewView preview, LifecycleOwner owner, Listener listener) {
     this.preview = preview;
@@ -65,6 +68,14 @@ final class ScanController {
 
   void setEnabled(boolean value) {
     enabled = value;
+  }
+
+  void afterSave(String code) {
+    gate.afterSave(code);
+  }
+
+  void allowRepeatedCode() {
+    gate.clear();
   }
 
   private void analyze(ImageProxy image) {
@@ -105,6 +116,7 @@ final class ScanController {
           .addOnSuccessListener(
               codes -> {
                 if (!enabled) return;
+                List<String> visible = new ArrayList<>();
                 for (Barcode code : codes) {
                   Rect rect = code.getBoundingBox();
                   if (code.getRawValue() != null
@@ -113,10 +125,13 @@ final class ScanController {
                       && rect.top >= 0
                       && rect.right <= side
                       && rect.bottom <= side) {
-                    enabled = false;
-                    listener.onCode(code.getRawValue().trim());
-                    break;
+                    visible.add(Domain.cleanId(code.getRawValue()));
                   }
+                }
+                String accepted = gate.accept(visible, android.os.SystemClock.elapsedRealtime());
+                if (accepted != null) {
+                  enabled = false;
+                  listener.onCode(accepted);
                 }
               })
           .addOnCompleteListener(

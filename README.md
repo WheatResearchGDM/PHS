@@ -1,4 +1,4 @@
-# PHS Reader — versão 0.2.0
+# PHS Reader — versão 0.3.0
 
 Aplicativo Android para coletar avaliações de PHS em celular ou tablet. A tela de coleta usa um desenho proporcional de 380 × 800 unidades, ajustado e centralizado na área disponível, sem rolagem. As janelas auxiliares podem rolar quando necessário para acomodar o teclado e fontes maiores.
 
@@ -19,17 +19,19 @@ Aplicativo Android para coletar avaliações de PHS em celular ou tablet. A tela
 
 ## OneDrive
 
-Instale e autentique o OneDrive no Android. Em **Configurações → Destino da exportação**, selecione **OneDrive**. Ao exportar, o aplicativo OneDrive instalado será aberto para escolher a pasta e confirmar o envio. O arquivo é compartilhado por um URI temporário com permissão apenas de leitura; o banco de coletas permanece privado. Não é necessário registrar o PHS Reader na Microsoft.
+O destino é escolhido **somente ao clicar em Exportar**, depois da seleção de lote e formato. Não há seleção de destino nas configurações. As opções são **OneDrive direto**, **OneDrive instalado**, **Pasta no aparelho** e **Salvar como**.
 
-Também há **Pasta no aparelho** e **Salvar como a cada exportação**. A entrada continua podendo ser escolhida no OneDrive pelo seletor de documentos Android. A seleção de uma pasta persistente do OneDrive pelo sistema não é exigida, pois esse provedor pode permitir abertura de arquivos sem oferecer seleção de pastas.
+**OneDrive direto:** a implementação usa Microsoft Graph e um fluxo de cliente público, sem segredo de cliente. Requer registrar o PHS Reader na Microsoft e informar o ID público do aplicativo. O registro ainda precisa ser feito na conta/organização; não é criado pelo APK. A autenticação acontece na página oficial da Microsoft. Depois o PHS Reader permite navegar pelas pastas, escolher uma e enviar o lote. A sessão de renovação é cifrada com Android Keystore. O envio só é confirmado após uma resposta de sucesso do Graph. Consulte [o roteiro de registro sem contratação de recursos pagos](docs/REGISTRO_MICROSOFT.md).
 
-Abrir a tela do OneDrive não confirma upload: escolha a pasta, confirme o envio e confira sua conclusão no próprio OneDrive. As avaliações permanecem no aparelho mesmo se o compartilhamento for cancelado. Não há Microsoft Graph próprio nem sincronização automática em segundo plano.
+**OneDrive instalado:** usa a tela do aplicativo OneDrive do Android para escolher a pasta e confirmar o envio, sem registro Microsoft adicional. Abrir essa tela não confirma upload; confira a conclusão no OneDrive. **Pasta no aparelho/Salvar como:** usam os seletores do Android em cada exportação. A entrada continua podendo ser escolhida no OneDrive pelo seletor de arquivos. As avaliações permanecem no aparelho se a conexão ou o envio não forem concluídos.
+
+As operações Graph usadas não constam como APIs cobradas por uso. O registro exige acesso a um diretório Entra existente e pode depender do administrador. A criação de um ambiente novo pode ter outros requisitos; não contrate recursos pagos para seguir este projeto. O espaço do OneDrive continua sujeito ao plano existente.
 
 ## Instalar
 
-[Baixar PHS Reader 0.2.0 no GitHub](https://github.com/WheatResearchGDM/PHS/releases/download/v0.2.0/PHS-Reader-0.2.0.apk). O APK está em **Releases**, disponível independentemente dos artefatos temporários de Actions.
+[Baixar PHS Reader 0.3.0 no GitHub](https://github.com/WheatResearchGDM/PHS/releases/download/v0.3.0/PHS-Reader-0.3.0.apk). O APK está em **Releases**, disponível independentemente dos artefatos temporários de Actions.
 
-O instalador gerado em `dist/PHS-Reader-0.2.0.apk` mantém o pacote e a chave local de testes da versão 0.1.0 publicada em Releases. Instale por cima para preservar as coletas, sem desinstalar. Compatível com Android 8.0/API 26 ou superior, câmera traseira opcional. Conceda a permissão de câmera para ler QR Codes.
+O instalador gerado em `dist/PHS-Reader-0.3.0.apk` mantém o pacote e a chave local de testes da versão 0.1.0 publicada em Releases. Instale por cima para preservar as coletas, sem desinstalar. Compatível com Android 8.0/API 26 ou superior, câmera traseira opcional. Conceda a permissão de câmera para ler QR Codes.
 
 Para manter atualizações locais compatíveis, preserve `.tools/debug.keystore`. Ela não é enviada ao GitHub. Os APKs produzidos pelo CI usam uma chave de testes temporária e não substituem uma instalação assinada com outra chave. A versão de produção deve adotar uma chave de distribuição estável e protegida.
 
@@ -47,7 +49,7 @@ O fluxo GitHub Actions compila e disponibiliza o APK de testes nos artefatos de 
 
 ## Validação
 
-Os testes automatizados cobrem contagens e avanço de campos de 0–15, limpeza após salvar, edição sem duplicidade, troca de dia, bloqueio temporário da etiqueta recém-salva, intenção de envio ao OneDrive e escopo da permissão de leitura, cálculos, CSV/Excel, importação, persistência e proporções de tela. Banco e tela são verificados em ambiente Android simulado com Robolectric.
+Os testes automatizados cobrem coleta, persistência, contagens, troca de dia, layout, CSV/Excel, destinos de exportação, intenção de compartilhamento Android e protocolo Graph com respostas simuladas: login pendente/expirado, renovação da sessão, paginação de pastas, rejeição de links externos, envio e conflitos de versão. Não houve autenticação nem envio real no OneDrive direto: essa validação depende do registro Microsoft e da autorização da conta.
 
 O leitor do aplicativo foi conferido com o modelo real de 7.804 amostras. O Excel de saída foi conferido independentemente com openpyxl, incluindo 20 colunas, identificadores, datas, fórmulas e valores em cache. Android Lint é executado sem supressão de erros. A leitura de câmera, permissões reais e a integração específica do OneDrive precisam de validação nos celulares/tablets que serão usados no campo.
 

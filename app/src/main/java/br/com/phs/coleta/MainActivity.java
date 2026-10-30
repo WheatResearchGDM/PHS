@@ -55,7 +55,7 @@ public class MainActivity extends ComponentActivity {
   private String observation = "", captureDay = "", editingDay = "";
   private boolean dirty = false, busy = false;
   private LinearLayout content;
-  private TextView destinationSummary;
+  private OneDriveExportFlow oneDriveFlow;
   private ActivityResultLauncher<String[]> inputPicker;
   private ActivityResultLauncher<Uri> folderPicker;
   private ActivityResultLauncher<String> permission;
@@ -78,7 +78,6 @@ public class MainActivity extends ComponentActivity {
     store = new Store(this);
     prefs = getSharedPreferences("settings", MODE_PRIVATE);
     DailyDates.resetIfNewDay(prefs, day());
-    if (!prefs.contains("outputMode")) prefs.edit().putString("outputMode", "onedrive").apply();
     if (!prefs.contains("deviceId"))
       prefs
           .edit()
@@ -100,13 +99,7 @@ public class MainActivity extends ComponentActivity {
             uri -> {
               if (uri != null) {
                 persist(uri);
-                prefs
-                    .edit()
-                    .putString("output", uri.toString())
-                    .putString("outputMode", "folder")
-                    .apply();
-                if (destinationSummary != null) destinationSummary.setText(destinationLabel());
-                message("Pasta de saída selecionada.");
+                if (pendingExport != null) exportToFolder(uri, pendingFile.endsWith(".csv"));
               }
             });
     permission =
@@ -864,16 +857,6 @@ public class MainActivity extends ComponentActivity {
             }),
         46);
     add(body, text("Catálogo local: " + store.catalogCount() + " genótipos", 12, MUTED), 26);
-    TextView target = text(destinationLabel(), 12, MUTED);
-    destinationSummary = target;
-    target.setMaxLines(2);
-    add(
-        body,
-        button(
-            "Destino da exportação",
-            () -> destinationDialog(() -> target.setText(destinationLabel()))),
-        46);
-    add(body, target, 29);
     EditText device = edit(prefs.getString("deviceName", Build.MODEL), false);
     dialogAdd(body, "Nome do dispositivo", device);
     add(
@@ -893,7 +876,7 @@ public class MainActivity extends ComponentActivity {
                       message("Coletas removidas. Cadastros preservados.");
                     })),
         46);
-    add(body, text("PHS Reader 0.2.0 · coleta offline", 12, MUTED), 28);
+    add(body, text("PHS Reader 0.3.0 · coleta offline", 12, MUTED), 28);
     ScrollView scroll = new ScrollView(this);
     scroll.addView(body);
     new AlertDialog.Builder(this)
@@ -910,43 +893,6 @@ public class MainActivity extends ComponentActivity {
               refresh();
             })
         .setNegativeButton("Fechar", null)
-        .show();
-  }
-
-  private String destinationLabel() {
-    return switch (prefs.getString("outputMode", "onedrive")) {
-      case "folder" -> "Pasta no aparelho · selecionada";
-      case "saveAs" -> "Salvar como · escolher destino ao exportar";
-      default -> "OneDrive · escolher pasta ao exportar";
-    };
-  }
-
-  private void destinationDialog(Runnable changed) {
-    String[] options = {
-      "OneDrive · escolher pasta ao exportar", "Pasta no aparelho", "Salvar como a cada exportação"
-    };
-    new AlertDialog.Builder(this)
-        .setTitle("Destino da exportação")
-        .setItems(
-            options,
-            (d, index) -> {
-              if (index == 1) {
-                try {
-                  folderPicker.launch(
-                      prefs.contains("output") ? Uri.parse(prefs.getString("output", "")) : null);
-                } catch (Exception e) {
-                  error("Seleção de pasta indisponível", e);
-                }
-              } else {
-                prefs.edit().putString("outputMode", index == 0 ? "onedrive" : "saveAs").apply();
-                changed.run();
-                message(
-                    index == 0
-                        ? "Ao exportar, escolha a pasta na tela do OneDrive."
-                        : "O destino será escolhido ao exportar.");
-              }
-            })
-        .setNegativeButton("Cancelar", null)
         .show();
   }
 
@@ -1266,9 +1212,7 @@ public class MainActivity extends ComponentActivity {
             android.R.layout.simple_spinner_dropdown_item,
             new String[] {"Excel (.xlsx)", "CSV (.csv)"}));
     dialogAdd(body, "Formato", format);
-    TextView destination = text(destinationLabel(), 12, MUTED);
-    destination.setMaxLines(2);
-    add(body, destination, 34);
+    add(body, text("O destino será escolhido ao clicar em Exportar.", 12, MUTED), 34);
     TextView file = text("", 12, NAVY);
     file.setMaxLines(3);
     add(body, file, 52);
@@ -1323,54 +1267,7 @@ public class MainActivity extends ComponentActivity {
             runOnUiThread(
                 () -> {
                   busy = false;
-                  String mode = prefs.getString("outputMode", "onedrive");
-                  if (mode.equals("onedrive")) {
-                    sendToOneDrive(csv);
-                    return;
-                  }
-                  if (mode.equals("saveAs")) {
-                    saveAs(csv);
-                    return;
-                  }
-                  String target = prefs.getString("output", "");
-                  if (target.trim().isEmpty()) {
-                    saveAs(csv);
-                    return;
-                  }
-                  try {
-                    DocumentFile folder = DocumentFile.fromTreeUri(this, Uri.parse(target));
-                    if (folder == null || !folder.canWrite())
-                      throw new IOException(
-                          "Sem acesso à pasta. Selecione-a novamente nas configurações.");
-                    DocumentFile existing = folder.findFile(pendingFile);
-                    if (existing != null)
-                      confirm(
-                          "Arquivo já existe",
-                          "Atualizar " + pendingFile + " com todos os registros atuais deste lote?",
-                          "Atualizar",
-                          () -> writeExport(existing.getUri()));
-                    else {
-                      DocumentFile file =
-                          folder.createFile(
-                              csv
-                                  ? "text/csv"
-                                  : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                              pendingFile);
-                      if (file == null)
-                        throw new IOException("Não foi possível criar o arquivo nesta pasta.");
-                      writeExport(file.getUri());
-                    }
-                  } catch (Exception e) {
-                    new AlertDialog.Builder(this)
-                        .setTitle("Pasta indisponível")
-                        .setMessage(
-                            e.getMessage()
-                                + "\n"
-                                + "Você pode salvar pelo seletor do Android e escolher o OneDrive.")
-                        .setPositiveButton("Salvar como", (d, w) -> saveAs(csv))
-                        .setNegativeButton("Cancelar", null)
-                        .show();
-                  }
+                  chooseExportDestination(csv);
                 });
           } catch (Exception e) {
             runOnUiThread(
@@ -1380,6 +1277,66 @@ public class MainActivity extends ComponentActivity {
                 });
           }
         });
+  }
+
+  private void chooseExportDestination(boolean csv) {
+    if (pendingExport == null) return;
+    String[] choices = {
+      "OneDrive · conexão direta Microsoft",
+      "OneDrive instalado · escolher pasta no aplicativo",
+      "Pasta no aparelho",
+      "Salvar como"
+    };
+    new AlertDialog.Builder(this)
+        .setTitle("Onde deseja exportar?")
+        .setItems(
+            choices,
+            (dialog, index) -> {
+              if (index == 0) {
+                if (oneDriveFlow != null) oneDriveFlow.close();
+                oneDriveFlow =
+                    new OneDriveExportFlow(
+                        this, prefs, pendingExport, pendingFile, csv, this::message);
+                oneDriveFlow.start();
+              } else if (index == 1) sendToOneDrive(csv);
+              else if (index == 2) {
+                try {
+                  folderPicker.launch(null);
+                } catch (Exception e) {
+                  error("Não foi possível escolher uma pasta", e);
+                }
+              } else saveAs(csv);
+            })
+        .setNegativeButton("Cancelar", null)
+        .show();
+  }
+
+  private void exportToFolder(Uri uri, boolean csv) {
+    try {
+      DocumentFile folder = DocumentFile.fromTreeUri(this, uri);
+      if (folder == null || !folder.canWrite())
+        throw new IOException(
+            "Não há permissão de gravação nesta pasta. Escolha outro destino ao exportar.");
+      DocumentFile existing = folder.findFile(pendingFile);
+      if (existing != null)
+        confirm(
+            "Arquivo já existe",
+            "Substituir " + pendingFile + " nesta pasta?",
+            "Substituir",
+            () -> writeExport(existing.getUri()));
+      else {
+        DocumentFile file =
+            folder.createFile(
+                csv
+                    ? "text/csv"
+                    : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                pendingFile);
+        if (file == null) throw new IOException("Não foi possível criar o arquivo nesta pasta.");
+        writeExport(file.getUri());
+      }
+    } catch (Exception e) {
+      error("Exportação não concluída; coletas preservadas", e);
+    }
   }
 
   private void saveAs(boolean csv) {
@@ -1419,7 +1376,8 @@ public class MainActivity extends ComponentActivity {
                 () -> {
                   busy = false;
                   pendingExport = null;
-                  message("Arquivo entregue ao provedor. Confira o envio no OneDrive.");
+                  message(
+                      "Arquivo gravado no destino selecionado. Coletas preservadas no aparelho.");
                 });
           } catch (Exception e) {
             runOnUiThread(
@@ -1470,6 +1428,7 @@ public class MainActivity extends ComponentActivity {
   protected void onDestroy() {
     handler.removeCallbacks(clockTick);
     if (scanner != null) scanner.close();
+    if (oneDriveFlow != null) oneDriveFlow.close();
     worker.execute(store::close);
     worker.shutdown();
     super.onDestroy();

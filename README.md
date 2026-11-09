@@ -1,13 +1,13 @@
-# PHS Reader — versão 0.4.0
+# PHS Reader — versão 0.5.0
 
-Aplicativo Android para coletar avaliações de PHS em celular ou tablet. A tela de coleta usa um desenho proporcional de 380 × 800 unidades, ajustado e centralizado na área disponível, sem rolagem. As janelas auxiliares podem rolar quando necessário para acomodar o teclado e fontes maiores.
+Aplicativo Android para coletar avaliações de PHS em celular ou tablet. A tela de coleta preenche a área disponível, respeitando as barras do sistema, sem rolagem. A escala de textos, ícones e câmera é uniforme; a largura das linhas e o espaço do teclado se adaptam à proporção da tela, sem faixas laterais. As janelas auxiliares podem rolar quando necessário para acomodar o teclado e fontes maiores.
 
 ## Funções
 
 - Importação de `.xlsx` e CSV UTF-8 com `FEID, ENSAIO, LOCAL, VARIEDADE, PARCELA, REPETIÇÃO` na primeira aba. A ordem das colunas pode mudar. Linhas com FEID ausente ou repetido bloqueiam a importação sem substituir o catálogo anterior.
 - Atualização do arquivo de entrada já selecionado, preservando as avaliações existentes e a identificação original de cada coleta.
 - QR Code offline com modelo ML Kit incluído no APK, leitura limitada ao quadrado central, e busca alternativa por número da parcela. Se uma parcela tiver vários resultados, o coletor escolhe a amostra.
-- Contagens novas R/MR/MS/S/AS de 0 a 15. 0 e 2–9 avançam automaticamente; 1 aguarda outro dígito (10–15) ou seta para registrar somente 1. O avanço automático termina em AS. Campos vazios equivalem a zero. Total zero exige confirmação e produz média em branco. Registros históricos mantêm seus valores originais.
+- Contagens novas R/MR/MS/S/AS de 0 a 15. Todo dígito, inclusive 1, avança automaticamente. Para informar 10–15, digite 1, toque novamente na caixa que contém o 1 e digite o segundo dígito. O avanço automático termina em AS. Campos vazios equivalem a zero. Total zero exige confirmação e produz média em branco. Registros históricos mantêm seus valores originais.
 - Média ponderada `(R + MR*3 + MS*5 + S*7 + AS*9) / total`.
 - Observações com Germinado, Doente, Verde e texto livre.
 - Colheita e montagem opcionais, mantidas no mesmo dia até alteração e limpas no início de um novo dia; leitura corresponde ao dia em que a coleta é salva.
@@ -28,9 +28,9 @@ Não há login Microsoft, envio ao OneDrive ou registro de aplicativo nesta vers
 
 ## Instalar
 
-[Baixar PHS Reader 0.4.0 no GitHub](https://github.com/WheatResearchGDM/PHS/releases/download/v0.4.0/PHS-Reader-0.4.0.apk). O APK está em **Releases**, disponível independentemente dos artefatos temporários de Actions.
+[Baixar PHS Reader 0.5.0 no GitHub](https://github.com/WheatResearchGDM/PHS/releases/download/v0.5.0/PHS-Reader-0.5.0.apk). O APK está em **Releases**, disponível independentemente dos artefatos temporários de Actions.
 
-O instalador gerado em `dist/PHS-Reader-0.4.0.apk` mantém o pacote e a chave local de testes da versão 0.1.0 publicada em Releases. Instale por cima para preservar as coletas, sem desinstalar. Compatível com Android 8.0/API 26 ou superior, câmera traseira opcional. Conceda a permissão de câmera para ler QR Codes.
+O instalador gerado em `dist/PHS-Reader-0.5.0.apk` mantém o pacote e a chave local de testes da versão 0.1.0 publicada em Releases. Instale por cima para preservar as coletas, sem desinstalar. Compatível com Android 8.0/API 26 ou superior, câmera traseira opcional. Conceda a permissão de câmera para ler QR Codes.
 
 Para manter atualizações locais compatíveis, preserve `.tools/debug.keystore`. Ela não é enviada ao GitHub. Os APKs produzidos pelo CI usam uma chave de testes temporária e não substituem uma instalação assinada com outra chave. A versão de produção deve adotar uma chave de distribuição estável e protegida.
 

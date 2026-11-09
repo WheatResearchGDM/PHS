@@ -27,8 +27,9 @@ public class LayoutTest {
   }
 
   @Test
-  public void phoneAndTabletPreserveSameProportionsWithoutOverflow() {
-    for (int[] size : new int[][] {{360, 640}, {393, 820}, {800, 1280}, {1280, 800}}) {
+  public void phoneAndTabletFillAvailableAreaWithUniformControlScale() {
+    for (int[] size :
+        new int[][] {{360, 640}, {393, 820}, {800, 1280}, {1200, 2000}, {1280, 800}}) {
       FitLayout root = new FitLayout(RuntimeEnvironment.getApplication());
       root.addView(new LinearLayout(RuntimeEnvironment.getApplication()));
       root.measure(
@@ -39,11 +40,26 @@ public class LayoutTest {
       float width = canvas.getWidth() * canvas.getScaleX(),
           height = canvas.getHeight() * canvas.getScaleY();
       assertEquals(canvas.getScaleX(), canvas.getScaleY(), .0001f);
-      assertEquals(380f / 800, width / height, .0001f);
-      assertTrue(width <= size[0] + 1);
-      assertTrue(height <= size[1] + 1);
-      assertTrue(canvas.getLeft() >= 0);
-      assertTrue(canvas.getTop() >= 0);
+      assertEquals(size[0], width, 1f);
+      assertEquals(size[1], height, 1f);
+      assertEquals(0, canvas.getLeft());
+      assertEquals(0, canvas.getTop());
     }
+  }
+
+  @Test
+  public void systemBarInsetsRemainOutsideResponsiveCanvas() {
+    FitLayout root = new FitLayout(RuntimeEnvironment.getApplication());
+    root.setPadding(12, 24, 18, 30);
+    root.addView(new LinearLayout(RuntimeEnvironment.getApplication()));
+    root.measure(
+        View.MeasureSpec.makeMeasureSpec(1200, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(2000, View.MeasureSpec.EXACTLY));
+    root.layout(0, 0, 1200, 2000);
+    View canvas = root.getChildAt(0);
+    assertEquals(12, canvas.getLeft());
+    assertEquals(24, canvas.getTop());
+    assertEquals(1170, canvas.getWidth() * canvas.getScaleX(), 1f);
+    assertEquals(1946, canvas.getHeight() * canvas.getScaleY(), 1f);
   }
 }

@@ -67,18 +67,35 @@ public class CollectionFlowTest {
     call("select", Domain.Sample.class, sample);
     call("key", String.class, "2");
     call("key", String.class, "1");
-    assertEquals(1, field("active"));
-    call("key", String.class, "5");
     assertEquals(2, field("active"));
+    call("key", String.class, "5");
+    assertEquals(3, field("active"));
     set("observation", "Doente");
     call("save");
     Store s = (Store) field("store");
     assertEquals(1, s.count(LocalDate.now().toString()));
+    assertArrayEquals(
+        new int[] {2, 1, 5, 0, 0}, s.existing("123", LocalDate.now().toString()).counts());
     assertEquals("Doente", s.existing("123", LocalDate.now().toString()).observation());
     assertNull(field("current"));
     assertArrayEquals(new String[] {"", "", "", "", ""}, (String[]) field("values"));
     assertEquals("", field("observation"));
     assertEquals(0, field("active"));
+  }
+
+  @Test
+  public void reselectingOneAllowsTwoDigitCountWithoutChangingNextCategory() throws Exception {
+    call("select", Domain.Sample.class, sample);
+    call("key", String.class, "1");
+    assertEquals(1, field("active"));
+    ((android.widget.TextView[]) field("scoreViews"))[0].performClick();
+    call("key", String.class, "5");
+    assertEquals(1, field("active"));
+    assertArrayEquals(new String[] {"15", "", "", "", ""}, (String[]) field("values"));
+    call("save");
+    assertArrayEquals(
+        new int[] {15, 0, 0, 0, 0},
+        ((Store) field("store")).existing("123", LocalDate.now().toString()).counts());
   }
 
   @Test

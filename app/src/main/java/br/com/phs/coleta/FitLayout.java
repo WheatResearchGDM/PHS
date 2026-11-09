@@ -3,9 +3,11 @@ package br.com.phs.coleta;
 import android.content.Context;
 import android.view.*;
 
-/** A single portrait design canvas, uniformly scaled and centered on phones/tablets. */
+/** Responsive canvas: fill the available area while uniformly scaling fixed-size controls. */
 final class FitLayout extends ViewGroup {
   private final int designWidth, designHeight;
+  private float scale = 1;
+  private int canvasWidth, canvasHeight;
 
   FitLayout(Context context) {
     super(context);
@@ -17,26 +19,29 @@ final class FitLayout extends ViewGroup {
   @Override
   protected void onMeasure(int w, int h) {
     setMeasuredDimension(MeasureSpec.getSize(w), MeasureSpec.getSize(h));
+    int width = Math.max(1, getMeasuredWidth() - getPaddingLeft() - getPaddingRight());
+    int height = Math.max(1, getMeasuredHeight() - getPaddingTop() - getPaddingBottom());
+    scale = Math.min(width / (float) designWidth, height / (float) designHeight);
+    // Expand the logical canvas instead of leaving unused bands around a fixed portrait page.
+    // Weighted rows distribute the extra width/height; camera and icons keep a uniform scale.
+    canvasWidth = Math.round(width / scale);
+    canvasHeight = Math.round(height / scale);
     if (getChildCount() > 0)
       getChildAt(0)
           .measure(
-              MeasureSpec.makeMeasureSpec(designWidth, MeasureSpec.EXACTLY),
-              MeasureSpec.makeMeasureSpec(designHeight, MeasureSpec.EXACTLY));
+              MeasureSpec.makeMeasureSpec(canvasWidth, MeasureSpec.EXACTLY),
+              MeasureSpec.makeMeasureSpec(canvasHeight, MeasureSpec.EXACTLY));
   }
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
     if (getChildCount() == 0) return;
     View child = getChildAt(0);
-    int width = getWidth() - getPaddingLeft() - getPaddingRight(),
-        height = getHeight() - getPaddingTop() - getPaddingBottom();
-    float scale = Math.min(width / (float) designWidth, height / (float) designHeight);
     child.setPivotX(0);
     child.setPivotY(0);
     child.setScaleX(scale);
     child.setScaleY(scale);
-    int x = getPaddingLeft() + Math.round((width - designWidth * scale) / 2),
-        y = getPaddingTop() + Math.round((height - designHeight * scale) / 2);
-    child.layout(x, y, x + designWidth, y + designHeight);
+    int x = getPaddingLeft(), y = getPaddingTop();
+    child.layout(x, y, x + canvasWidth, y + canvasHeight);
   }
 }

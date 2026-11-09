@@ -8,7 +8,7 @@ final class EntryRules {
     if (!digit.matches("[0-9]")) return new Result(current, false, false);
     String candidate = current.equals("1") ? current + digit : digit;
     if (Integer.parseInt(candidate) > 15) return new Result(current, false, false);
-    return new Result(candidate, !candidate.equals("1"), true);
+    return new Result(candidate, true, true);
   }
 
   static boolean validNewCounts(int[] counts) {

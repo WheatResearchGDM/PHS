@@ -6,11 +6,11 @@ import org.junit.Test;
 
 public class EntryRulesTest {
   @Test
-  public void singleDigitsAdvanceExceptOne() {
+  public void everySingleDigitAdvancesIncludingOne() {
     for (int n = 0; n <= 9; n++) {
       EntryRules.Result r = EntryRules.digit("", String.valueOf(n));
       assertTrue(r.accepted());
-      assertEquals(n != 1, r.advance());
+      assertTrue(r.advance());
       assertEquals(String.valueOf(n), r.value());
     }
   }

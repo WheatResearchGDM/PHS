@@ -243,6 +243,8 @@ public class MainActivity extends ComponentActivity {
     camera.addView(preview, new FrameLayout.LayoutParams(-1, -1));
     camera.addView(new FramingView(this), new FrameLayout.LayoutParams(-1, -1));
     feidLabel = text("Aponte para o QR Code", 11, Color.WHITE);
+    feidLabel.setSingleLine(true);
+    feidLabel.setEllipsize(android.text.TextUtils.TruncateAt.END);
     feidLabel.setGravity(Gravity.CENTER);
     feidLabel.setBackgroundColor(0xdd09243b);
     FrameLayout.LayoutParams codeParams = new FrameLayout.LayoutParams(-1, dp(25), Gravity.BOTTOM);
@@ -465,7 +467,7 @@ public class MainActivity extends ComponentActivity {
         values[active] = result.value();
         dirty = true;
         if (result.advance()) active = Math.min(active + 1, 4);
-      } else message("Use de 0 a 15 espigas. Para registrar apenas 1, toque na seta.");
+      } else message("Use de 0 a 15 espigas.");
     }
     refreshScores();
   }
@@ -871,7 +873,7 @@ public class MainActivity extends ComponentActivity {
                       message("Coletas removidas. Cadastros preservados.");
                     })),
         46);
-    add(body, text("PHS Reader 0.4.0 · exportação local", 12, MUTED), 28);
+    add(body, text("PHS Reader 0.5.0 · exportação local", 12, MUTED), 28);
     ScrollView scroll = new ScrollView(this);
     scroll.addView(body);
     new AlertDialog.Builder(this)
